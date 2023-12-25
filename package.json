@@ -11,6 +11,7 @@
   "author": "Marco",
   "license": "ISC",
   "dependencies": {
+    "@fastify/cors": "^8.5.0",
     "@fastify/formbody": "^7.4.0",
     "axios": "^1.2.6",
     "dotenv": "^16.0.1",
