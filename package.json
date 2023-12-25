@@ -1,0 +1,30 @@
+{
+  "name": "server-fastify",
+  "version": "0.0.1",
+  "description": "Dinamic server api",
+  "main": "server.js",
+  "scripts": {
+    "start": "nodemon server",
+    "build": "esbuild server.js --bundle --minify --platform=node --external:fastify --outfile=build.js",
+    "prod": "node build"
+  },
+  "author": "Marco",
+  "license": "ISC",
+  "dependencies": {
+    "@fastify/formbody": "^7.4.0",
+    "axios": "^1.2.6",
+    "dotenv": "^16.0.1",
+    "ejs": "^3.1.8",
+    "esbuild": "0.16.12",
+    "fastify": "^4.25.2",
+    "jsonwebtoken": "^9.0.0",
+    "moment": "^2.29.4",
+    "mongoose": "^6.8.0",
+    "node-cache": "^5.1.2",
+    "node-cron": "^3.0.3",
+    "winston": "^3.8.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
