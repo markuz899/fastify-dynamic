@@ -4,6 +4,7 @@ const ErrorHandler = require(path.resolve("lib/Common/error"));
 const Logger = require(path.resolve("lib/Logger/"));
 let logger = new Logger(process.env.LOG_ACTIVE, process.env.LOG_LEVEL);
 
+REDIS_KEY = "logs";
 module.exports = class Log {
   static async paginated(query) {
     try {
@@ -28,9 +29,15 @@ module.exports = class Log {
     }
   }
 
-  static async list() {
+  static async list(fastify) {
     try {
-      return await LogModel.find({}, { __v: 0 });
+      const { redis } = fastify;
+      let res = await redis.get(REDIS_KEY);
+      if (!res) {
+        let data = await LogModel.find({}, { __v: 0 });
+        await redis.set(REDIS_KEY, JSON.stringify(data));
+      }
+      return JSON.parse(res);
     } catch (err) {
       logger.error(`MONGO-LOG list METHOD FAILED, CAUSE: ${err.message}`);
       throw ErrorHandler(err);
@@ -54,9 +61,14 @@ module.exports = class Log {
     }
   }
 
-  static async create(payload) {
+  static async create(payload, fastify) {
     try {
-      return await LogModel.create(payload);
+      const { redis } = fastify;
+      let res = await LogModel.create(payload);
+      let data = await this.list(fastify);
+      await redis.del(REDIS_KEY);
+      await redis.set(REDIS_KEY, JSON.stringify(data));
+      return res;
     } catch (err) {
       logger.error(`MONGO-LOG create METHOD FAILED, CAUSE: ${err.message}`);
       throw ErrorHandler(err);
@@ -65,6 +77,7 @@ module.exports = class Log {
 
   static async updateOne(_id, data) {
     try {
+      const { redis } = fastify;
       let response = await LogModel.findOneAndUpdate({ _id }, data, {
         new: true,
       });
@@ -75,6 +88,7 @@ module.exports = class Log {
           message: "Element not found",
         };
       }
+      await redis.del(REDIS_KEY);
       return response;
     } catch (err) {
       logger.error(`MONGO-LOG updateOne METHOD FAILED, CAUSE ${err.message}`);
@@ -84,6 +98,7 @@ module.exports = class Log {
 
   static async remove(id) {
     try {
+      const { redis } = fastify;
       let response = await LogModel.deleteOne({ _id: id });
       if (response.deletedCount === 0)
         return {
@@ -91,7 +106,8 @@ module.exports = class Log {
           name: "DocumentNotFoundError",
           message: "Element not found!",
         };
-      return await this.list();
+      await redis.del(REDIS_KEY);
+      return await this.list(fastify);
     } catch (err) {
       logger.error(`MONGO-LOG remove METHOD FAILED, CAUSE ${err.message}`);
       throw ErrorHandler(err);
