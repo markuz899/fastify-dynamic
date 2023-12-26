@@ -9,7 +9,7 @@ async function routes(fastify, options) {
   fastify.get("/", async (request, reply) => {
     logger.debug("logs list api route");
     try {
-      let log = await Log.list();
+      let log = await Log.list(request.query);
       return log;
     } catch (err) {
       logger.error(`Error log -  \n${err}`);

@@ -28,8 +28,11 @@ module.exports = class Log {
     }
   }
 
-  static async list() {
+  static async list(query) {
     try {
+      if (query.paginated) {
+        return await this.paginated(query);
+      }
       return await LogModel.find({}, { __v: 0 });
     } catch (err) {
       logger.error(`MONGO-LOG list METHOD FAILED, CAUSE: ${err.message}`);
