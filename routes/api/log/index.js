@@ -92,7 +92,7 @@ module.exports = class Log {
           name: "DocumentNotFoundError",
           message: "Element not found!",
         };
-      return await this.list(fastify);
+      return await this.list();
     } catch (err) {
       logger.error(`MONGO-LOG remove METHOD FAILED, CAUSE ${err.message}`);
       throw ErrorHandler(err);
