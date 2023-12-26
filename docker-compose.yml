@@ -10,10 +10,3 @@ services:
     ports:
       - 27017:27017
     restart: always
-
-  redis:
-    image: redis
-    container_name: "db-redis"
-    ports:
-      - 6379:6379
-    restart: always

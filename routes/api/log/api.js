@@ -9,7 +9,7 @@ async function routes(fastify, options) {
   fastify.get("/", async (request, reply) => {
     logger.debug("logs list api route");
     try {
-      let log = await Log.list(fastify);
+      let log = await Log.list();
       return log;
     } catch (err) {
       logger.error(`Error log -  \n${err}`);
@@ -22,7 +22,7 @@ async function routes(fastify, options) {
     logger.debug("log create api route");
     try {
       const { body } = request;
-      let log = await Log.create(body, fastify);
+      let log = await Log.create(body);
       return log;
     } catch (err) {
       logger.error(`Error log -  \n${err}`);

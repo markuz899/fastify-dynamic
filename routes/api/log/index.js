@@ -29,15 +29,9 @@ module.exports = class Log {
     }
   }
 
-  static async list(fastify) {
+  static async list() {
     try {
-      const { redis } = fastify;
-      let res = await redis.get(REDIS_KEY);
-      if (!res) {
-        let data = await LogModel.find({}, { __v: 0 });
-        res = await redis.set(REDIS_KEY, JSON.stringify(data));
-      }
-      return JSON.parse(res);
+      return await LogModel.find({}, { __v: 0 });
     } catch (err) {
       logger.error(`MONGO-LOG list METHOD FAILED, CAUSE: ${err.message}`);
       throw ErrorHandler(err);
@@ -61,14 +55,9 @@ module.exports = class Log {
     }
   }
 
-  static async create(payload, fastify) {
+  static async create(payload) {
     try {
-      const { redis } = fastify;
-      let res = await LogModel.create(payload);
-      let data = await this.list(fastify);
-      await redis.del(REDIS_KEY);
-      await redis.set(REDIS_KEY, JSON.stringify(data));
-      return res;
+      return await LogModel.create(payload);
     } catch (err) {
       logger.error(`MONGO-LOG create METHOD FAILED, CAUSE: ${err.message}`);
       throw ErrorHandler(err);
