@@ -35,7 +35,7 @@ module.exports = class Log {
       let res = await redis.get(REDIS_KEY);
       if (!res) {
         let data = await LogModel.find({}, { __v: 0 });
-        await redis.set(REDIS_KEY, JSON.stringify(data));
+        res = await redis.set(REDIS_KEY, JSON.stringify(data));
       }
       return JSON.parse(res);
     } catch (err) {
