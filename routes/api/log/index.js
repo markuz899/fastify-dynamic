@@ -4,7 +4,6 @@ const ErrorHandler = require(path.resolve("lib/Common/error"));
 const Logger = require(path.resolve("lib/Logger/"));
 let logger = new Logger(process.env.LOG_ACTIVE, process.env.LOG_LEVEL);
 
-REDIS_KEY = "logs";
 module.exports = class Log {
   static async paginated(query) {
     try {
