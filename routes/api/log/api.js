@@ -1,8 +1,6 @@
 const path = require("path");
-const Logger = require(path.resolve("lib/Logger/"));
+const logger = require(path.resolve("lib/Logger/"));
 const Log = require("./index");
-
-let logger = new Logger(process.env.LOG_ACTIVE, process.env.LOG_LEVEL);
 
 async function routes(fastify, options) {
   // GET LOGS

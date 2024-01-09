@@ -1,8 +1,7 @@
 const path = require("path");
 const LogModel = require("./log");
 const ErrorHandler = require(path.resolve("lib/Common/error"));
-const Logger = require(path.resolve("lib/Logger/"));
-let logger = new Logger(process.env.LOG_ACTIVE, process.env.LOG_LEVEL);
+const logger = require(path.resolve("lib/Logger/"));
 
 module.exports = class Log {
   static async paginated(query) {
@@ -25,6 +24,7 @@ module.exports = class Log {
       return results;
     } catch (err) {
       logger.error(`paginated METHOD FAILED, CAUSE: ${err.message}`);
+      throw ErrorHandler(err);
     }
   }
 
