@@ -57,6 +57,23 @@ module.exports = class Log {
     }
   }
 
+  static async getQuery(query) {
+    try {
+      let response = await LogModel.findOne(query);
+      if (!response) {
+        return {
+          error: true,
+          name: "DocumentNotFoundError",
+          message: "Element not found",
+        };
+      }
+      return response;
+    } catch (err) {
+      logger.error(`MONGO-LOG getQuery METHOD FAILED, CAUSE ${err.message}`);
+      throw ErrorHandler(err);
+    }
+  }
+
   static async create(payload) {
     try {
       return await LogModel.create(payload);

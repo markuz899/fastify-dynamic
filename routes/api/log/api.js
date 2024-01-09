@@ -1,6 +1,7 @@
 const path = require("path");
 const logger = require(path.resolve("lib/Logger/"));
 const Log = require("./index");
+const { sendApiError, API_ERROR } = require("../../../lib/Common/handler");
 
 async function routes(fastify, options) {
   // GET LOGS
@@ -20,6 +21,8 @@ async function routes(fastify, options) {
     logger.debug("log create api route");
     try {
       const { body } = request;
+      let exist = await Log.getQuery({ event: body.event });
+      if (exist) return sendApiError(reply, {code: API_ERROR.DOCUMENT_ALREDY_EXIST});
       let log = await Log.create(body);
       return log;
     } catch (err) {
