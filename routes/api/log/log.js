@@ -1,19 +1,33 @@
-const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
+const { Sequelize, DataTypes } = require("sequelize");
+const path = require("path");
+const sequelize = require(path.resolve("lib/Common/sequelize"));
 
-const collection = "Log";
-const LogSchema = new Schema({
-  event: { type: String, trim: true },
-  level: { type: String, trim: true, default: "debug" },
-  createdAt: { type: Date, default: Date.now },
-});
-
-LogSchema.methods.toJSON = function () {
-  let obj = this.toObject();
-  delete obj.__v;
-  return obj;
-};
-
-let LogModel = mongoose.model(collection, LogSchema);
+const LogModel = sequelize.define(
+  "Log",
+  {
+    event: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      trim: true,
+    },
+    level: {
+      type: DataTypes.STRING,
+      defaultValue: "debug",
+      trim: true,
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
+  },
+  {
+    tableName: "logs",
+    timestamps: true,
+  }
+);
 
 module.exports = LogModel;

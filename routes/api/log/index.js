@@ -8,18 +8,21 @@ module.exports = class Log {
     try {
       const current = parseInt(query.current || 1);
       const pageSize = parseInt(query.pageSize) || 15;
-      const skipIndex = (current - 1) * pageSize;
+      const offset = (current - 1) * pageSize;
+
       const results = {
         data: [],
         total: 0,
       };
 
-      results.data = await LogModel.find()
-        .sort({ createdAt: -1 })
-        .limit(pageSize)
-        .skip(skipIndex)
-        .exec();
-      results.total = await LogModel.find().count();
+      const { rows, rowCount } = await LogModel.findAndCountAll({
+        order: [["createdAt", "DESC"]],
+        limit: pageSize,
+        offset: offset,
+      });
+
+      results.data = rows;
+      results.total = rowCount;
 
       return results;
     } catch (err) {
@@ -30,19 +33,21 @@ module.exports = class Log {
 
   static async list(query) {
     try {
-      if (query.paginated) {
+      if (query?.paginated) {
         return await this.paginated(query);
       }
-      return await LogModel.find({}, { __v: 0 });
+      return await LogModel.findAll({
+        attributes: { exclude: ["createdAt", "updatedAt"] },
+      });
     } catch (err) {
-      logger.error(`MONGO-LOG list METHOD FAILED, CAUSE: ${err.message}`);
+      logger.error(`POSTGRES-LOG list METHOD FAILED, CAUSE: ${err.message}`);
       throw ErrorHandler(err);
     }
   }
 
   static async getOne(id) {
     try {
-      let response = await LogModel.findById(id);
+      let response = await LogModel.findByPk(id);
       if (!response) {
         return {
           error: true,
@@ -52,24 +57,18 @@ module.exports = class Log {
       }
       return response;
     } catch (err) {
-      logger.error(`MONGO-LOG getOne METHOD FAILED, CAUSE ${err.message}`);
+      logger.error(`POSTGRES-LOG getOne METHOD FAILED, CAUSE ${err.message}`);
       throw ErrorHandler(err);
     }
   }
 
   static async getQuery(query) {
     try {
-      let response = await LogModel.findOne(query);
-      if (!response) {
-        return {
-          error: true,
-          name: "DocumentNotFoundError",
-          message: "Element not found",
-        };
-      }
+      let response = await LogModel.findOne({ where: query });
+      if (!response) return null;
       return response;
     } catch (err) {
-      logger.error(`MONGO-LOG getQuery METHOD FAILED, CAUSE ${err.message}`);
+      logger.error(`POSTGRES-LOG getQuery METHOD FAILED, CAUSE ${err.message}`);
       throw ErrorHandler(err);
     }
   }
@@ -78,42 +77,46 @@ module.exports = class Log {
     try {
       return await LogModel.create(payload);
     } catch (err) {
-      logger.error(`MONGO-LOG create METHOD FAILED, CAUSE: ${err.message}`);
+      logger.error(`POSTGRES-LOG create METHOD FAILED, CAUSE: ${err.message}`);
       throw ErrorHandler(err);
     }
   }
 
-  static async updateOne(_id, data) {
+  static async updateOne(id, data) {
     try {
-      let response = await LogModel.findOneAndUpdate({ _id }, data, {
-        new: true,
+      let response = await LogModel.update(data, {
+        where: { id },
+        returning: true,
       });
-      if (!response) {
+      if (response[0] === 0) {
         return {
           error: true,
           name: "DocumentNotFoundError",
           message: "Element not found",
         };
       }
-      return response;
+      return response[1][0]; // restituire il record aggiornato
     } catch (err) {
-      logger.error(`MONGO-LOG updateOne METHOD FAILED, CAUSE ${err.message}`);
+      logger.error(
+        `POSTGRES-LOG updateOne METHOD FAILED, CAUSE ${err.message}`
+      );
       throw ErrorHandler(err);
     }
   }
 
   static async remove(id) {
     try {
-      let response = await LogModel.deleteOne({ _id: id });
-      if (response.deletedCount === 0)
+      let response = await LogModel.destroy({ where: { id } });
+      if (response === 0) {
         return {
           error: true,
           name: "DocumentNotFoundError",
           message: "Element not found!",
         };
+      }
       return await this.list();
     } catch (err) {
-      logger.error(`MONGO-LOG remove METHOD FAILED, CAUSE ${err.message}`);
+      logger.error(`POSTGRES-LOG remove METHOD FAILED, CAUSE ${err.message}`);
       throw ErrorHandler(err);
     }
   }
