@@ -9,13 +9,35 @@ const { Job } = require("bullmq");
 async function routes(fastify, options) {
   // POST LOGIN + FETCH DATA
   fastify.post("/", async (request, reply) => {
-    logger.debug(`Parallel scrape services`);
-
     try {
       const body = request.body;
 
+      if (!Array.isArray(body?.services) || body?.services.length === 0) {
+        return reply.code(400).send({
+          success: false,
+          message: "Devi specificare almeno un servizio da utilizzare",
+        });
+      }
+
+      const filteredServices = services.filter((service) =>
+        body?.services.includes(service.name)
+      );
+
+      if (filteredServices.length === 0) {
+        return reply.code(404).send({
+          success: false,
+          message: "Nessun servizio valido trovato",
+        });
+      }
+
+      logger.info(
+        `Parallel scrape from: ${body?.app} | services: ${body?.services?.join(
+          ", "
+        )}`
+      );
+
       // Istanza della classe Scrape
-      const scraper = new Scrape(services);
+      const scraper = new Scrape(filteredServices);
 
       // Eseguo la logica centralizzata
       const results = await scraper.fetchData(body);

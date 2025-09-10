@@ -63,7 +63,9 @@ class Scrape {
         const response = dataResponses[index];
         return {
           service: service.name,
-          success: response.status === "fulfilled",
+          success: response.value?.error
+            ? false
+            : response.status === "fulfilled",
           data: response.status === "fulfilled" ? response.value : null,
           error:
             response.status === "rejected" ? response.reason.message : null,
