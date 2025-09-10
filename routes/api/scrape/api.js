@@ -40,7 +40,7 @@ async function routes(fastify, options) {
       const scraper = new Scrape(filteredServices);
 
       // Eseguo la logica centralizzata
-      const results = await scraper.fetchData(body);
+      const results = await scraper.fetchData(body.data);
 
       return reply.send({ success: true, results });
     } catch (err) {
@@ -55,11 +55,41 @@ async function routes(fastify, options) {
 
   fastify.post("/job", async (request, reply) => {
     try {
-      const job = await scrapeQueue.add(jobs.scrapeTask, request.body, {
-        // removeOnComplete: true,
-        removeOnFail: false,
-        attempts: 3, // retry automatici in caso di errore
-      });
+      const body = request.body;
+
+      if (!Array.isArray(body?.services) || body?.services.length === 0) {
+        return reply.code(400).send({
+          success: false,
+          message: "Devi specificare almeno un servizio da utilizzare",
+        });
+      }
+
+      const filteredServices = services.filter((service) =>
+        body?.services.includes(service.name)
+      );
+
+      if (filteredServices.length === 0) {
+        return reply.code(404).send({
+          success: false,
+          message: "Nessun servizio valido trovato",
+        });
+      }
+
+      logger.info(
+        `Job scrape from: ${body?.app} | services: ${body?.services?.join(
+          ", "
+        )}`
+      );
+
+      const job = await scrapeQueue.add(
+        jobs.scrapeTask,
+        { ...body, services: filteredServices },
+        {
+          // removeOnComplete: true,
+          removeOnFail: false,
+          attempts: 3, // retry automatici in caso di errore
+        }
+      );
 
       return { jobId: job.id };
     } catch (err) {
