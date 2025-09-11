@@ -81,17 +81,15 @@ async function routes(fastify, options) {
         )}`
       );
 
-      const job = await scrapeQueue.add(
-        jobs.scrapeTask,
-        { ...body, services: filteredServices },
-        {
-          // removeOnComplete: true,
-          removeOnFail: false,
-          attempts: 3, // retry automatici in caso di errore
-        }
-      );
+      const job = await scrapeQueue.add(jobs.scrapeTask, body, {
+        // removeOnComplete: true,
+        removeOnFail: false,
+        attempts: 3, // retry automatici in caso di errore
+      });
 
-      return { jobId: job.id };
+      const servicesName = filteredServices.map((srv) => srv.name)?.join(", ");
+
+      return { jobId: job.id, services: servicesName };
     } catch (err) {
       fastify.log.error(err);
       return reply
@@ -106,9 +104,9 @@ async function routes(fastify, options) {
       if (!job) return reply.status(404).send({ error: "Job non trovato" });
 
       const state = await job.getState();
-      const result = job.returnvalue;
+      const data = job.returnvalue;
 
-      return { jobId: job.id, state, result };
+      return { jobId: job.id, state, data };
     } catch (err) {
       fastify.log.error(err);
       return reply
